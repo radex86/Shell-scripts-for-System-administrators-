@@ -22,9 +22,10 @@ log () {
 
 
 # usage function explain How to use the script
-#USAGE () {
-#
-#}
+USAGE () {
+	echo "${0} prumpt the admin to input the name of the accounts to be deleted"
+	ech  "Admin can delete users up until 'n' is typed"
+}
 
 # user delete function
 
@@ -43,6 +44,11 @@ Udel () {
     # Tell the user the accout was deleted
     log "${USR} is Deleted successfully" >&2
 }
+
+# Notice
+USAGE
+sleep 4
+echo 
 
 #checking if the user wish to have silent remove or verbose
 read -p "Do you want to see execution messages? (Y/n): " a
