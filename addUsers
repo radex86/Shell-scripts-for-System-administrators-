@@ -1,5 +1,6 @@
 #!/bin/bash
 #
+# Author: Manar Al-Kali
 # This program is adds users to the OS and generate a password to the new
 # accounts
 # it also enforce superuser privilages
