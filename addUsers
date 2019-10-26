@@ -44,7 +44,6 @@ echo " "
 crtUsr () {
 # Defining the account variables
 USER_PASSWD=$(date +%s%N${RANDOM}${RANDOM}| sha256sum | head -c48)
-#local USER_PASSWD="${USER_NAME}${i}Y1234"
 local USER_NAME_ACC="${USER_NAME}${i}"
 
 # Genrating the password
