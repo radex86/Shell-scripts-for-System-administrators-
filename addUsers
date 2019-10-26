@@ -1,0 +1,184 @@
+#!/bin/bash
+#
+# This program is adds users to the OS and generate a password to the new
+# accounts
+# it also enforce superuser privilages
+# Optionally, you can provide the name of the account on the GUI interface 
+# by providing comments as command line arguments 
+# A password will be automatically generated for the user
+# The username, password and hostname of the account will be displayed.
+# this code is created to Generate user account for RedHat OS in the university lab
+
+
+# creating the user function 
+
+USAGE () {
+# this is usage function to descibe how to use the  script
+        echo "Usage: $(basename ${0}) No.OF_ACCOUNTS USER_NAME [COMMENT]..." >&2
+        echo "Create an account on the local system with the name of the USER_NAME and a Displyed USER_NAME  in the COMMENT" >&2
+	echo "each account will have a generated password that should be change on the first log in"
+}
+
+
+
+Dplay () {
+# Display the username,password, and the hostname when it succeeded
+echo "--------------------${USER_NAME_ACC}-------------------------"
+echo 'username: '
+echo "${USER_NAME_ACC}"
+echo 'password: '
+echo "${USER_PASSWD}"
+echo 'hostname: '
+echo "${HOSTNAME}"
+echo 'Description: '
+echo "${USER_COMMENTS}${i}"
+echo "privilages permission"
+echo "${USER_NAME_ACC}: Granted"
+echo "-------------------------------------------------------------"
+echo " "
+
+}
+
+
+crtUsr () {
+# Defining the account variables
+USER_PASSWD=$(date +%s%N${RANDOM}${RANDOM}| sha256sum | head -c48)
+#local USER_PASSWD="${USER_NAME}${i}Y1234"
+local USER_NAME_ACC="${USER_NAME}${i}"
+
+# Genrating the password
+echo "The Password will be Generated for ${USER_NAME_ACC} is: ${USER_PASSWD}"
+sleep 2
+
+# Create the Account
+useradd -m -c "${USER_COMMENTS}${i}" "${USER_NAME_ACC}" &> /dev/null
+
+# make sure the Account is created and command is succeeded
+# we don't want to tell the user that an acount is created when it hasn't
+if [[ ${?} -ne 0 ]]
+then 
+	echo " ACCOUNT has NOT been created" >&2
+	exit 1
+fi
+
+# Set the password for CentOS
+echo "${USER_PASSWD}" | passwd --stdin ${USER_NAME_ACC} &> /dev/null
+
+
+# adding password for Ubuntu systems
+if [[ ${?} -ne 0 ]]
+then
+
+	echo "${USER_NAME_ACC}:${USER_PASSWD}" | chpasswd &> /dev/null
+#	echo -e "${USER_PASSWD}" |passwd ${USER_NAME_ACC} &> /dev/null
+fi
+
+# Check to see if the passwd command succeeded
+if [[ ${?} -ne 0 ]]
+then
+	echo "Password has NOT been set!" >&2
+	exit 1
+fi
+
+
+# set User privilages to the Users
+usermod -aG wheel "${USER_NAME_ACC}" &> /dev/null
+
+
+# adding privilages for Ubuntu systems
+if [[ ${?} -ne 0 ]]
+then
+
+	usermod -aG sudo "${USER_NAME_ACC}" &> /dev/null
+fi
+
+# check if the operation is success
+if [[ ${?} -ne 0 ]]
+then
+        echo "Permission Has NOT Been Granted!" >&2
+        exit 1
+fi
+
+# Force the password to change on the first login
+passwd -e ${USER_NAME}${i}
+
+
+# Display the account 
+Dplay 
+
+}
+
+# Notice
+echo "This code is created by MANAR AL-KALI (radex86) to Generate multiple users  in Ubuntu and CentOS Distributions \n"
+echo "\n"
+USAGE
+echo "Please read the notice carefully"
+sleep 1
+
+# make sure the script is being excuted with superuser privilages
+if [[ "${UID}" -ne 0 ]] 
+then 
+	echo "${UID} you are not root" >&2
+	echo "Please excute this with sudo or as root" >&2
+	exit 1
+fi
+
+# If they don't supply at least one argument, then give them help
+if [[ "${#}" -lt 1 ]]
+then 
+	USAGE
+	exit 1
+fi
+
+# Checking if the first argument is a number
+NO_ACCOUNT="${1}"
+shift
+
+# asigning the regulaer expressions
+reggex='^[0-9]{1,2}$'
+# if the first argument does not matche a number in the  the regular expression reggex then exit
+if  ! [[ "${NO_ACCOUNT}" =~ ${reggex} ]]
+then
+        echo "Usage: $(basename ${0}) No.O_FACCOUNTS USER_NAME [COMMENT]..." >&2
+        echo "Create an account on the local system with the name of the USER_NAME and a comments field of COMMENT" >&2
+        exit 1
+fi
+
+# check the number of users
+echo "The number of Intended Accouts: ${NO_ACCOUNT}"
+echo " "
+
+# The first parameter is the username 
+USER_NAME="${1}"
+
+# The rest of the parameters are for the account comments
+# so we shift the parameters done by 1 then we assign the rest to comments
+shift
+
+USER_COMMENTS="${@}"
+
+echo "This process will create ${NO_ACCOUNT} account(s) under the name from ${USER_NAME}1 till ${USER_NAME}${NO_ACCOUNT}"
+echo "The Generated password will have the random format make sure to updated on the next log in"
+read -p "Do you want to Proceed [Y/n]: " a
+
+# check the choice 
+
+case "${a}" in
+
+	Y) 
+		echo "Proceeding!";;
+	n)
+		echo "The process is canceled, Bye!"
+		exit 1;;
+	*)
+		echo "Invalid input"
+		exit 1;;
+esac
+for (( i=1; i<= NO_ACCOUNT; i++))
+do
+	crtUsr $i
+done
+
+echo "DONE!"
+exit 0
+
