@@ -100,7 +100,7 @@ then
 fi
 
 # Force the password to change on the first login
-passwd -e ${USER_NAME}${i}
+passwd -e ${USER_NAME}${i} &> /dev/null
 
 
 # Display the account 
