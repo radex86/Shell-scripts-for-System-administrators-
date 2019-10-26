@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Author- Manar Al-Kali
+# Description- This script will delete multiple users as they will be provided 
+#              as an input from within the script
+
+# check if the user is a superuser
+if [[ ${UID} -ne 0 ]]
+then
+	echo "Please run this with sudo or as root"
+	exit 1
+fi
+
+# broadcasting function to print out any message to be delivered
+log () {
+    local MESSAGES="${@}"
+    if [[ $VERBOSE == 'T' ]]
+    then
+        echo "${MESSAGES}"
+    fi
+}
+
+
+# usage function explain How to use the script
+#USAGE () {
+#
+#}
+
+# user delete function
+
+Udel () {
+
+    # delete the user
+    userdel -rf ${USR} &> /dev/null
+
+    # Make sure the user got deleted
+    if [[ ${?} -ne 0 ]]
+    then 
+	echo "${USR} can not deleted [USER NOT Exists] " >&2
+	exit 1
+    fi
+
+    # Tell the user the accout was deleted
+    log "${USR} is Deleted successfully" >&2
+}
+
+#checking if the user wish to have silent remove or verbose
+read -p "Do you want to see execution messages? (Y/n): " a
+
+VERBOSE='F'
+case $a in 
+    Y ) 
+        VERBOSE='T'
+	log "verbose messages is activated"
+         ;;
+    n )
+        VERBOSE='F'
+        ;;
+    * )
+	echo " wrong execution"
+	exit 1;; 
+esac
+
+while  [ "${REQ}" != "NO" ] 
+do 
+	read -p "Enter the USER NAME To Delete: " USR
+	Udel $USR 
+	
+	read -p "Would you like to continue? (Any <YES>/n <NO>): " RES
+ 
+        case $RES in 
+              n ) 
+                  REQ='NO';;
+
+              * )
+	          REQ='YES';;
+        esac
+
+done
+
+exit 0
+
+
+
